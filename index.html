@@ -98,14 +98,14 @@
         overflow-y: auto; 
     }
 
-    /* 文字サイズ調整箇所 */
+    /* 文字サイズ */
     .q-text { 
-        font-size: 1.6rem; /* 2.2rem -> 1.6rem に縮小 */
+        font-size: 1.6rem; 
         font-weight: bold; 
         margin-bottom: 25px; 
         color: #222; 
         width: 100%; 
-        line-height: 1.5; /* 行間を広げて読みやすく */
+        line-height: 1.5; 
         word-break: break-all;
     }
      
@@ -118,7 +118,7 @@
     }
      
     .a-text { 
-        font-size: 1.3rem; /* 1.8rem -> 1.3rem に縮小 */
+        font-size: 1.3rem; 
         color: #d32f2f; 
         font-weight: bold; 
         margin-bottom: 8px;
@@ -127,7 +127,7 @@
     }
      
     .r-text { 
-        font-size: 0.95rem; /* 1.1rem -> 0.95rem に縮小 */
+        font-size: 0.95rem; 
         color: #777; 
         word-break: break-all;
     }
@@ -188,7 +188,7 @@
     .btn-later { background: #f5f5f5; color: #616161; }
     .btn-known { background: #e3f2fd; color: #1565c0; }
 
-    /* オーバーレイ */
+    /* オーバーレイ（スタート画面） */
     #overlay { 
         position: fixed; top: 0; left: 0; right: 0; bottom: 0;
         width: 100%; height: 100%; 
@@ -196,7 +196,34 @@
         display: none; flex-direction: column; justify-content: center; align-items: center; 
         text-align: center; padding: 20px;
     }
-    .big-btn { background: #2196f3; color: white; border: none; padding: 15px 50px; border-radius: 30px; font-size: 1.1rem; font-weight: bold; cursor: pointer; box-shadow: 0 4px 15px rgba(33, 150, 243, 0.3); }
+    .overlay-title { font-size: 1.5rem; font-weight: bold; margin-bottom: 20px; color: #333; }
+    .big-btn { background: #2196f3; color: white; border: none; padding: 15px 50px; border-radius: 30px; font-size: 1.1rem; font-weight: bold; cursor: pointer; box-shadow: 0 4px 15px rgba(33, 150, 243, 0.3); margin-top: 20px; }
+
+    /* 統計パネル */
+    .stats-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 15px;
+        width: 100%;
+        max-width: 320px;
+        margin-bottom: 20px;
+    }
+    .stat-card {
+        background: #f8f9fa;
+        padding: 15px 10px;
+        border-radius: 12px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.03);
+    }
+    .stat-value { font-size: 1.4rem; font-weight: 800; color: #333; }
+    .stat-label { font-size: 0.8rem; color: #777; margin-top: 4px; }
+    
+    .stat-review .stat-value { color: #e65100; }
+    .stat-known .stat-value { color: #2e7d32; }
+    .stat-later .stat-value { color: #616161; }
+    .stat-remain .stat-value { color: #1565c0; }
 
 </style>
 </head>
@@ -240,7 +267,27 @@
         </div>
 
         <div id="overlay">
-            <h2 id="overlay-msg"></h2>
+            <div class="overlay-title" id="overlay-msg">学習状況</div>
+            
+            <div class="stats-grid" id="stats-grid">
+                <div class="stat-card stat-remain">
+                    <span class="stat-value" id="stat-remain">0</span>
+                    <span class="stat-label">残り全て</span>
+                </div>
+                <div class="stat-card stat-review">
+                    <span class="stat-value" id="stat-review">0</span>
+                    <span class="stat-label">復習 (今)</span>
+                </div>
+                <div class="stat-card stat-later">
+                    <span class="stat-value" id="stat-later">0</span>
+                    <span class="stat-label">後回し済</span>
+                </div>
+                <div class="stat-card stat-known">
+                    <span class="stat-value" id="stat-known">0</span>
+                    <span class="stat-label">覚えた</span>
+                </div>
+            </div>
+
             <button class="big-btn" id="overlay-btn" onclick="startSession()">学習スタート</button>
             <button onclick="addMore()" id="overlay-sub-btn" style="background:none; border:none; color:#999; margin-top:30px; text-decoration:underline; cursor:pointer;">さらに30問追加</button>
         </div>
@@ -271,6 +318,7 @@
 
 <script>
     const db = new Dexie("FlashcardApp_v2");
+    // status: 0=New, 1=Review(SRS), 2=Later, 9=Known
     db.version(1).stores({ questions: "++id, status, nextReview, order" });
 
     let studyQueue = [];
@@ -282,11 +330,30 @@
         const count = await db.questions.count();
         if (count > 0) {
             switchScreen('study-screen');
+            updateOverlayStats(); 
             showOverlay("学習を始めましょう", "スタート", false);
         } else {
             switchScreen('setup-screen');
         }
     };
+
+    // 統計情報の更新処理
+    async function updateOverlayStats() {
+        const now = Date.now();
+        const total = await db.questions.count();
+        const known = await db.questions.where('status').equals(9).count();
+        const later = await db.questions.where('status').equals(2).count();
+        // 復習: status=1 かつ 復習時間が現在時刻を過ぎているもの
+        const reviews = await db.questions.where('status').equals(1).filter(i => i.nextReview <= now).count();
+        
+        // 残り = 全体 - 覚えた
+        const remaining = total - known;
+
+        document.getElementById('stat-remain').innerText = remaining;
+        document.getElementById('stat-review').innerText = reviews;
+        document.getElementById('stat-later').innerText = later;
+        document.getElementById('stat-known').innerText = known;
+    }
 
     function handleCardClick() {
         if (!isSessionActive || isAnswerShown) return;
@@ -324,13 +391,27 @@
     async function startSession() {
         hideOverlay();
         const now = Date.now();
+        // 1. 復習カード (status=1, 時間切れ)
         const reviews = await db.questions.where('status').equals(1).filter(i => i.nextReview <= now).toArray();
         let needed = Math.max(0, 30 - reviews.length);
-        const news = (needed > 0) ? await db.questions.orderBy('order').filter(i => i.status === 0).limit(needed).toArray() : [];
+        
+        // 2. 新規カード (status=0)
+        let news = [];
+        if (needed > 0) {
+            news = await db.questions.orderBy('order').filter(i => i.status === 0).limit(needed).toArray();
+        }
+
+        // 3. 新規不足時の後回しカード (status=2)
+        if (news.length < needed) {
+            const neededLater = needed - news.length;
+            const laters = await db.questions.orderBy('order').filter(i => i.status === 2).limit(neededLater).toArray();
+            news = [...news, ...laters];
+        }
 
         studyQueue = [...reviews, ...news].sort(() => Math.random() - 0.5);
         if (studyQueue.length === 0) {
             showOverlay("復習はありません", "終了", false);
+            updateOverlayStats();
             return;
         }
         isSessionActive = true;
@@ -360,43 +441,73 @@
         }
     }
 
+    // 「わかる」ボタン：忘却曲線ロジック
     async function clickUnderstand() {
         if (!isSessionActive) return;
         if (!isAnswerShown) { showAnswer(); return; }
-        const nextTime = Date.now() + (24 * 60 * 60 * 1000);
-        await db.questions.update(currentCard.id, { status: 1, nextReview: nextTime, reviewCount: (currentCard.reviewCount||0) + 1 });
+        
+        // 現在のレベルを取得（初回は0）
+        const currentLvl = currentCard.reviewCount || 0;
+        
+        // 間隔設定 (日数): 1, 3, 7, 14, 30, 60...
+        const intervals = [1, 3, 7, 14, 30, 60];
+        // レベルに応じた日数を取得。範囲外なら60日(またはそれ以上)
+        const daysToAdd = (currentLvl < intervals.length) ? intervals[currentLvl] : 60;
+
+        const nextTime = Date.now() + (daysToAdd * 24 * 60 * 60 * 1000);
+
+        // status: 1 (復習リスト/赤) に変更し、次回の復習時間をセット
+        await db.questions.update(currentCard.id, { 
+            status: 1, 
+            nextReview: nextTime, 
+            reviewCount: currentLvl + 1 
+        });
+        
         studyQueue.shift(); loadNextCard();
     }
 
+    // 「わからない」ボタン：その場でやり直し
     function clickUnknown() {
         if (!isSessionActive) return;
         if (!isAnswerShown) { showAnswer(); return; }
         studyQueue.push(studyQueue.shift()); loadNextCard();
     }
 
+    // 「知ってる」ボタン：覚えたリスト（緑）へ
     async function clickKnown() {
         if (!isSessionActive) return;
+        // status 9 = Known
         await db.questions.update(currentCard.id, { status: 9 });
         studyQueue.shift(); loadNextCard();
     }
 
+    // 「後回し」ボタン：後回しリスト（灰）へ
     async function clickLater() {
         if (!isSessionActive) return;
         const lastItem = await db.questions.orderBy('order').last();
-        await db.questions.update(currentCard.id, { order: (lastItem ? lastItem.order : 0) + 1000 });
+        // status 2 = Later
+        await db.questions.update(currentCard.id, { status: 2, order: (lastItem ? lastItem.order : 0) + 1000 });
         studyQueue.shift(); loadNextCard();
     }
 
     function completeSession() {
         isSessionActive = false;
+        updateOverlayStats(); 
         showOverlay("🎉 完了！", "再開", true);
     }
      
     function showOverlay(msg, btnTxt, sub) {
         document.getElementById('overlay').style.display = 'flex';
         document.getElementById('overlay-msg').innerText = msg;
+        if(msg.includes("完了") || msg.includes("復習")) {
+            document.querySelector('.overlay-title').innerText = msg;
+        } else {
+            document.querySelector('.overlay-title').innerText = "学習状況";
+        }
         document.getElementById('overlay-btn').innerText = btnTxt;
         document.getElementById('overlay-sub-btn').style.display = sub ? 'block' : 'none';
+        
+        updateOverlayStats();
     }
 
     function hideOverlay() { document.getElementById('overlay').style.display = 'none'; }
@@ -429,8 +540,14 @@
 
     async function resetData() { if(confirm("全消去しますか？")) { await db.delete(); location.reload(); } }
     async function addMore() {
-        const moreNews = await db.questions.orderBy('order').filter(i => i.status === 0).limit(30).toArray();
-        if (moreNews.length === 0) { alert("新規なし"); return; }
+        let moreNews = await db.questions.orderBy('order').filter(i => i.status === 0).limit(30).toArray();
+        if (moreNews.length < 30) {
+            const needed = 30 - moreNews.length;
+            const moreLaters = await db.questions.orderBy('order').filter(i => i.status === 2).limit(needed).toArray();
+            moreNews = [...moreNews, ...moreLaters];
+        }
+
+        if (moreNews.length === 0) { alert("新規・後回しのカードはありません"); return; }
         studyQueue = moreNews; hideOverlay(); isSessionActive = true; loadNextCard();
     }
     function copyCardContent() {
