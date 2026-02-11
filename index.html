@@ -35,7 +35,7 @@
     #header { padding: 10px 15px; background: white; border-bottom: 1px solid #e0e0e0; display: flex; justify-content: space-between; align-items: center; height: 50px; flex-shrink: 0; }
     .status-badge { background: #e8f5e9; color: #2e7d32; padding: 4px 10px; border-radius: 15px; font-size: 0.8rem; font-weight: bold; }
     
-    /* カードエリア：高さを固定してボタンを動かさない */
+    /* カードエリア */
     #card-container { 
         flex: 1; 
         padding: 10px; 
@@ -43,84 +43,89 @@
         justify-content: center; 
         align-items: center; 
         overflow: hidden;
+        /* カードとボタンの間隔調整 */
+        padding-bottom: 0;
     }
     
     #card {
         width: 100%; 
         max-width: 500px; 
-        height: 320px; /* 高さを完全に固定 */
+        height: 360px; /* 高さを320pxから360pxへ拡大 */
         background: white; 
-        border-radius: 16px;
-        box-shadow: 0 8px 20px rgba(0,0,0,0.06);
+        border-radius: 20px;
+        box-shadow: 0 8px 25px rgba(0,0,0,0.08);
         display: flex; 
         flex-direction: column;
         position: relative; 
         overflow: hidden;
-        cursor: pointer; /* クリックできることを示す */
+        cursor: pointer;
     }
 
     /* カード内のコンテンツ配置 */
     .card-content { 
         flex: 1; 
-        padding: 20px; 
+        padding: 24px; 
         display: flex; 
         flex-direction: column; 
         align-items: center; 
         justify-content: center; 
         text-align: center;
-        overflow: hidden; /* はみ出し防止 */
+        overflow-y: auto; /* 文字が極端に多い場合はスクロール許可 */
     }
     
-    .level-badge { position: absolute; top: 12px; left: 12px; font-size: 0.7rem; color: #aaa; border: 1px solid #eee; padding: 1px 6px; border-radius: 4px; }
-    .shortcut-hint { position: absolute; bottom: 8px; right: 12px; font-size: 0.65rem; color: #ddd; }
+    .level-badge { position: absolute; top: 15px; left: 15px; font-size: 0.8rem; color: #aaa; border: 1px solid #eee; padding: 2px 8px; border-radius: 6px; }
+    .shortcut-hint { position: absolute; bottom: 10px; right: 15px; font-size: 0.7rem; color: #ddd; }
 
-    /* 文字サイズの調整：長文でも入りやすく */
+    /* 文字サイズの調整：全体的に大きく */
     .q-text { 
-        font-size: 1.4rem; 
+        font-size: 2.2rem; /* 基準サイズを大幅アップ */
         font-weight: bold; 
-        margin-bottom: 15px; 
+        margin-bottom: 20px; 
         color: #222; 
         width: 100%; 
-        line-height: 1.3;
+        line-height: 1.4;
         word-break: break-all;
     }
     
     .answer-area { 
         width: 100%; 
         display: none; 
-        border-top: 1px solid #f8f8f8; 
-        padding-top: 15px; 
+        border-top: 2px solid #f8f8f8; 
+        padding-top: 20px; 
         animation: fadeIn 0.2s ease; 
     }
     
     .a-text { 
-        font-size: 1.2rem; 
+        font-size: 1.6rem; /* 解答も大きく */
         color: #d32f2f; 
         font-weight: bold; 
-        margin-bottom: 4px;
+        margin-bottom: 6px;
         word-break: break-all;
+        line-height: 1.3;
     }
     
     .r-text { 
-        font-size: 0.95rem; 
+        font-size: 1.1rem; /* 読み仮名も少し大きく */
         color: #777; 
         word-break: break-all;
     }
 
-    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
 
-    /* コントロールボタン：ここも高さ固定 */
+    /* コントロールボタンエリア */
     #controls { 
-        height: 180px; 
-        padding: 10px; 
+        height: auto;
+        min-height: 190px;
+        padding: 10px 10px 30px 10px; /* 下部に30pxの余白を追加してボタン全体を持ち上げる */
         background: #fff; 
         border-top: 1px solid #eee;
         display: flex; 
         flex-direction: column; 
         justify-content: center; 
         align-items: center; 
-        gap: 10px; 
+        gap: 12px; /* ボタン間の隙間を少し広げる */
         flex-shrink: 0; 
+        z-index: 10;
     }
     
     .control-row { display: flex; gap: 15px; width: 100%; max-width: 400px; justify-content: center; align-items: center; }
@@ -129,22 +134,22 @@
         flex: 1; 
         max-width: 140px;
         border: none; 
-        border-radius: 12px; 
+        border-radius: 14px; 
         font-weight: bold; 
-        font-size: 0.9rem; 
+        font-size: 1.0rem; /* ボタン文字も少し大きく */
         cursor: pointer; 
         display: flex; 
         flex-direction: column; 
         justify-content: center; 
         align-items: center; 
-        height: 50px; 
+        height: 56px; /* ボタン自体の高さも少しアップ */
         transition: transform 0.1s; 
-        box-shadow: 0 2px 4px rgba(0,0,0,0.08);
+        box-shadow: 0 4px 10px rgba(0,0,0,0.05);
         user-select: none;
     }
     .btn:active, .btn.active-key { transform: scale(0.94); filter: brightness(0.9); }
     
-    /* 色の調整（少し落ち着いた色味に） */
+    /* 色設定 */
     .btn-understand { background: #f1f8e9; color: #33691e; }
     .btn-unknown { background: #fff3e0; color: #e65100; }
     .btn-later { background: #f5f5f5; color: #616161; }
@@ -158,7 +163,7 @@
         display: none; flex-direction: column; justify-content: center; align-items: center; 
         text-align: center; padding: 20px;
     }
-    .big-btn { background: #2196f3; color: white; border: none; padding: 15px 50px; border-radius: 30px; font-size: 1.1rem; font-weight: bold; cursor: pointer; }
+    .big-btn { background: #2196f3; color: white; border: none; padding: 15px 50px; border-radius: 30px; font-size: 1.1rem; font-weight: bold; cursor: pointer; box-shadow: 0 4px 15px rgba(33, 150, 243, 0.3); }
 
 </style>
 </head>
@@ -182,7 +187,7 @@
             <div id="card" onclick="handleCardClick()">
                 <span class="level-badge" id="lvl-badge">Lv.0</span>
                 <span class="shortcut-hint">タップで解答</span>
-                <button onclick="event.stopPropagation(); copyCardContent()" style="position:absolute; top:12px; right:12px; border:none; background:none; cursor:pointer; color:#ddd;"><i class="fa-regular fa-copy"></i></button>
+                <button onclick="event.stopPropagation(); copyCardContent()" style="position:absolute; top:12px; right:12px; border:none; background:none; cursor:pointer; color:#ccc; padding:10px;"><i class="fa-regular fa-copy fa-lg"></i></button>
 
                 <div class="card-content">
                     <div class="q-text" id="q-text"></div>
@@ -243,13 +248,11 @@
         }
     };
 
-    // カードクリック時の動作
     function handleCardClick() {
         if (!isSessionActive || isAnswerShown) return;
         showAnswer();
     }
 
-    // キーボード操作
     document.addEventListener('keydown', (e) => {
         if (!document.getElementById('study-screen').classList.contains('active')) return;
 
@@ -305,12 +308,18 @@
         document.getElementById('lvl-badge').innerText = `Lv.${currentCard.reviewCount || 0}`;
         document.getElementById('a-area').style.display = 'none';
         
-        // 文字数に応じたサイズ微調整 (1.4rem ~ 1.0rem)
+        // 文字数に応じたサイズ調整（基準値を大きく変更）
         const totalLen = currentCard.question.length + currentCard.answer.length;
         const qElem = document.getElementById('q-text');
-        if (totalLen > 50) qElem.style.fontSize = "1.0rem";
-        else if (totalLen > 30) qElem.style.fontSize = "1.2rem";
-        else qElem.style.fontSize = "1.4rem";
+        
+        // 文字数が多くても極端に小さくならないように調整
+        if (totalLen > 60) {
+            qElem.style.fontSize = "1.3rem"; // 最長文でも読みやすいサイズ確保
+        } else if (totalLen > 30) {
+            qElem.style.fontSize = "1.7rem"; // 中くらいの文章
+        } else {
+            qElem.style.fontSize = "2.4rem"; // 短い単語はドカンと大きく
+        }
 
         updateCount();
     }
@@ -318,6 +327,11 @@
     function showAnswer() {
         document.getElementById('a-area').style.display = 'block';
         isAnswerShown = true;
+        // 解答表示時にスクロールが必要なら下へ
+        const content = document.querySelector('.card-content');
+        if(content.scrollHeight > content.clientHeight) {
+            content.scrollTop = content.scrollHeight;
+        }
     }
 
     async function clickUnderstand() {
