@@ -48,19 +48,21 @@
 
     @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
 
-    /* コントロールボタン (十字キー配置を意識したレイアウト) */
-    #controls { height: 140px; padding: 10px; background: white; box-shadow: 0 -2px 10px rgba(0,0,0,0.05); display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 5px; }
+    /* コントロールボタン (十字キー配置) */
+    #controls { height: 160px; padding: 10px; background: white; box-shadow: 0 -2px 10px rgba(0,0,0,0.05); display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 8px; }
     
-    .control-row { display: flex; gap: 10px; width: 100%; max-width: 500px; justify-content: center; }
-    .btn { flex: 1; border: none; border-radius: 12px; font-weight: bold; font-size: 1rem; cursor: pointer; display: flex; flex-direction: column; justify-content: center; align-items: center; height: 50px; transition: 0.1s; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+    .control-row { display: flex; gap: 15px; width: 100%; max-width: 500px; justify-content: center; align-items: center; }
+    .btn { width: 110px; border: none; border-radius: 12px; font-weight: bold; font-size: 0.95rem; cursor: pointer; display: flex; flex-direction: column; justify-content: center; align-items: center; height: 48px; transition: 0.1s; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
     .btn:active, .btn.active-key { transform: scale(0.96); filter: brightness(0.9); }
-    .btn small { font-size: 0.7rem; font-weight: normal; margin-left: 5px; }
-
+    
     /* 色設定 */
-    .btn-understand { background: #e8f5e9; color: #1b5e20; width: 100%; } /* 上 */
-    .btn-unknown { background: #fff3e0; color: #e65100; width: 100%; } /* 下 */
-    .btn-later { background: #f1f3f4; color: #5f6368; } /* 左 */
-    .btn-known { background: #e3f2fd; color: #0d47a1; } /* 右 */
+    .btn-understand { background: #e8f5e9; color: #1b5e20; } /* 右：わかる (緑) */
+    .btn-unknown { background: #fff3e0; color: #e65100; }    /* 左：わからない (オレンジ) */
+    .btn-later { background: #f1f3f4; color: #5f6368; }     /* 下：後回し (グレー) */
+    .btn-known { background: #e3f2fd; color: #0d47a1; }     /* 上：知ってる (青) */
+
+    /* レイアウト調整用 */
+    .row-middle { justify-content: center; gap: 30px; }
 
     /* オーバーレイ */
     #overlay { 
@@ -94,7 +96,7 @@
         <div id="card-container">
             <div id="card">
                 <span class="level-badge" id="lvl-badge">Lv.0</span>
-                <span class="shortcut-hint">Enter:解答/開始 | 矢印:操作</span>
+                <span class="shortcut-hint">Enter:解答 | 矢印:操作</span>
                 <button onclick="copyCardContent()" style="position:absolute; top:15px; right:15px; border:none; background:none; cursor:pointer; color:#ccc;"><i class="fa-regular fa-copy"></i></button>
 
                 <div class="card-content">
@@ -115,23 +117,24 @@
 
         <div id="controls">
             <div class="control-row">
-                <button class="btn btn-understand" id="btn-understand" onclick="clickUnderstand()">
-                    <span><i class="fa-solid fa-arrow-up"></i> わかる</span>
+                <button class="btn btn-known" id="btn-known" onclick="clickKnown()">
+                    <span><i class="fa-solid fa-arrow-up"></i> 知ってる</span>
                 </button>
             </div>
             
-            <div class="control-row">
-                <button class="btn btn-later" id="btn-later" onclick="clickLater()">
-                    <span><i class="fa-solid fa-arrow-left"></i> 後回し</span>
+            <div class="control-row row-middle">
+                <button class="btn btn-unknown" id="btn-unknown" onclick="clickUnknown()">
+                    <span><i class="fa-solid fa-arrow-left"></i> わからない</span>
                 </button>
-                <button class="btn btn-known" id="btn-known" onclick="clickKnown()">
-                    <span>知ってる <i class="fa-solid fa-arrow-right"></i></span>
+                
+                <button class="btn btn-understand" id="btn-understand" onclick="clickUnderstand()">
+                    <span>わかる <i class="fa-solid fa-arrow-right"></i></span>
                 </button>
             </div>
 
             <div class="control-row">
-                <button class="btn btn-unknown" id="btn-unknown" onclick="clickUnknown()">
-                    <span><i class="fa-solid fa-arrow-down"></i> わからない</span>
+                <button class="btn btn-later" id="btn-later" onclick="clickLater()">
+                    <span><i class="fa-solid fa-arrow-down"></i> 後回し</span>
                 </button>
             </div>
         </div>
@@ -146,6 +149,9 @@
     let isAnswerShown = false;
     let isSessionActive = false;
 
+    // 初期化
+    document.getElementById('overlay').style.display = 'none'; // 初期状態を明示
+
     window.onload = async () => {
         checkMidnightReset();
         const count = await db.questions.count();
@@ -159,24 +165,16 @@
 
     // --- キーボード操作 ---
     document.addEventListener('keydown', (e) => {
-        // 画面が表示されていない時は無効
-        if (document.getElementById('study-screen').style.display === 'none') return;
+        // 設定画面などの場合は無効 (class activeの有無で判定)
+        if (!document.getElementById('study-screen').classList.contains('active')) return;
 
-        // オーバーレイが出ている場合、Enterでスタート
+        // オーバーレイが表示されている場合
         const overlay = document.getElementById('overlay');
-        if (overlay.style.display !== 'none') {
+        // computedStyleを使って確実に表示状態を確認
+        if (window.getComputedStyle(overlay).display !== 'none') {
             if (e.key === 'Enter') {
                 e.preventDefault();
-                // 表示されているボタンに応じて動作
-                if (document.getElementById('overlay-btn').innerText === "スタート") {
-                    startSession();
-                } else if (document.getElementById('overlay-btn').innerText === "学習スタート") {
-                    startSession();
-                } else {
-                    // 完了画面などの場合、追加ボタンがあればそちらを優先等のロジックも可だが
-                    // 基本はスタートボタンを押す挙動にする
-                    document.getElementById('overlay-btn').click();
-                }
+                document.getElementById('overlay-btn').click();
             }
             return;
         }
@@ -184,31 +182,32 @@
         // 学習中
         switch(e.key) {
             case 'Enter':
+            case ' ': // スペースキーも対応
                 e.preventDefault();
                 if (!isAnswerShown) {
                     showAnswer();
-                    highlightButton('card'); // 視覚フィードバック用（任意）
+                    highlightButton('card');
                 }
                 break;
-            case 'ArrowUp': // わかる
-                e.preventDefault();
-                highlightButton('btn-understand');
-                clickUnderstand();
-                break;
-            case 'ArrowDown': // わからない
+            case 'ArrowLeft': // わからない (Unknown)
                 e.preventDefault();
                 highlightButton('btn-unknown');
                 clickUnknown();
                 break;
-            case 'ArrowLeft': // 後回し
+            case 'ArrowRight': // わかる (Understand)
                 e.preventDefault();
-                highlightButton('btn-later');
-                clickLater();
+                highlightButton('btn-understand');
+                clickUnderstand();
                 break;
-            case 'ArrowRight': // 知ってる
+            case 'ArrowUp': // 知ってる (Known)
                 e.preventDefault();
                 highlightButton('btn-known');
                 clickKnown();
+                break;
+            case 'ArrowDown': // 後回し (Later)
+                e.preventDefault();
+                highlightButton('btn-later');
+                clickLater();
                 break;
         }
     });
@@ -222,10 +221,7 @@
 
     // --- ロジック ---
 
-    // 抽出ロジックの修正版（Order優先）
     async function getNewQuestions(count) {
-        // status=0 のものを order順（昇順）で取得
-        // Dexieで複合インデックスがない場合、Collectionを使用
         return await db.questions
             .orderBy('order')
             .filter(item => item.status === 0)
@@ -241,16 +237,12 @@
         // 1. 復習
         const reviews = await db.questions.where('status').equals(1).filter(i => i.nextReview <= now).toArray();
         
-        // 2. 新規 (不足分を補充)
+        // 2. 新規
         let needed = Math.max(0, 30 - reviews.length);
-        // ★修正: Order順で取得するため、後回し(Order大)は選ばれない
         const news = (needed > 0) ? await getNewQuestions(needed) : [];
 
-        studyQueue = [...reviews, ...news]; // 復習優先、その後新規
-        
-        // ※ここではシャッフルせず、復習→新規の順で出すか、混ぜるか。
-        // 一般的には混ぜたほうがいいのでシャッフルします。
-        studyQueue.sort(() => Math.random() - 0.5);
+        studyQueue = [...reviews, ...news]; 
+        studyQueue.sort(() => Math.random() - 0.5); // シャッフル
 
         if (studyQueue.length === 0) {
             showOverlay("現在、復習すべき問題はありません", "閉じる", true);
@@ -261,7 +253,6 @@
     }
 
     async function addMore() {
-        // ★修正: 追加分もOrder順で取得
         const moreNews = await getNewQuestions(30);
         if (moreNews.length === 0) {
             alert("新規問題はもうありません！"); return;
@@ -286,45 +277,45 @@
         document.getElementById('lvl-badge').innerText = `Lv.${currentCard.reviewCount || 0}`;
         document.getElementById('a-area').style.display = 'none';
         
-        // ボタンラベルのリセット
-        document.getElementById('btn-unknown').innerHTML = '<span><i class="fa-solid fa-arrow-down"></i> わからない</span>';
-        document.getElementById('btn-understand').innerHTML = '<span><i class="fa-solid fa-arrow-up"></i> わかる</span>';
+        // ボタンラベルのリセット (アイコンの方向を修正)
+        document.getElementById('btn-unknown').innerHTML = '<span><i class="fa-solid fa-arrow-left"></i> わからない</span>';
+        document.getElementById('btn-understand').innerHTML = '<span>わかる <i class="fa-solid fa-arrow-right"></i></span>';
 
         updateCount();
     }
 
-    // --- アクション ---
+    // --- アクション (キー配置変更に対応) ---
 
-    // 後回し修正：全データの最後尾へ
+    // 下キー：後回し
     async function clickLater() {
         if (!isSessionActive) return;
-        // DB全体で一番大きなOrderを取得し、さらに加算
+        // 最後尾へ移動
         const lastItem = await db.questions.orderBy('order').last();
         const maxOrder = lastItem ? lastItem.order : 0;
-        
-        // 確実に後ろに行くよう +1000 しておく
         await db.questions.update(currentCard.id, { order: maxOrder + 1000 });
 
         studyQueue.shift();
         loadNextCard();
     }
 
+    // 左キー：わからない
     function clickUnknown() {
         if (!isSessionActive) return;
         if (!isAnswerShown) {
             showAnswer();
-            document.getElementById('btn-unknown').innerHTML = '<span><i class="fa-solid fa-arrow-down"></i> もう一度</span>';
+            document.getElementById('btn-unknown').innerHTML = '<span><i class="fa-solid fa-arrow-left"></i> もう一度</span>';
         } else {
-            studyQueue.push(studyQueue.shift()); // 今日のリストの最後へ
+            studyQueue.push(studyQueue.shift()); // リストの最後へ
             loadNextCard();
         }
     }
 
+    // 右キー：わかる
     async function clickUnderstand() {
         if (!isSessionActive) return;
         if (!isAnswerShown) {
             showAnswer();
-            document.getElementById('btn-understand').innerHTML = '<span><i class="fa-solid fa-arrow-up"></i> 次へ</span>';
+            document.getElementById('btn-understand').innerHTML = '<span>次へ <i class="fa-solid fa-arrow-right"></i></span>';
         } else {
             // 復習予約
             const nextTime = Date.now() + (24 * 60 * 60 * 1000);
@@ -338,6 +329,7 @@
         }
     }
 
+    // 上キー：知ってる
     async function clickKnown() {
         if (!isSessionActive) return;
         await db.questions.update(currentCard.id, { status: 9 });
@@ -372,10 +364,12 @@
     }
 
     function hideOverlay() { document.getElementById('overlay').style.display = 'none'; }
+    
     function switchScreen(id) {
         document.querySelectorAll('.screen').forEach(e => e.classList.remove('active'));
         document.getElementById(id).classList.add('active');
     }
+    
     function updateCount() { document.getElementById('progress-text').innerText = `残り: ${studyQueue.length}問`; }
 
     // CSV読み込み
@@ -392,7 +386,7 @@
                     if (rows[i].length >= 2) {
                         data.push({
                             question: rows[i][0], answer: rows[i][1], reading: rows[i][2] || "",
-                            status: 0, nextReview: 0, reviewCount: 0, order: i // 初期順序はCSV順
+                            status: 0, nextReview: 0, reviewCount: 0, order: i
                         });
                     }
                 }
