@@ -37,8 +37,8 @@
      
     /* カードエリア */
     #card-container { 
-        flex: 1; /* 上下の要素以外の空間を全て使う */
-        padding: 15px; /* カード周りの余白 */
+        flex: 1; 
+        padding: 15px; 
         display: flex; 
         justify-content: center; 
         align-items: center; 
@@ -47,8 +47,8 @@
      
     #card {
         width: 100%; 
-        max-width: 600px; /* 横幅を少し広げた */
-        height: 100%; /* コンテナの高さいっぱいに広げる */
+        max-width: 600px; 
+        height: 100%; 
         background: white; 
         border-radius: 20px;
         box-shadow: 0 8px 25px rgba(0,0,0,0.08);
@@ -58,18 +58,17 @@
         cursor: pointer;
     }
 
-    /* カードヘッダー（Lvとコピーボタン用） */
+    /* カードヘッダー */
     .card-header {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        padding: 15px 20px 5px 20px; /* 上横の余白確保、下は少し狭く */
+        padding: 15px 20px 5px 20px;
         flex-shrink: 0;
     }
 
     .level-badge { 
-        /* 絶対配置を解除 */
-        font-size: 0.9rem; 
+        font-size: 0.85rem; 
         color: #aaa; 
         border: 1px solid #eee; 
         padding: 4px 10px; 
@@ -87,19 +86,53 @@
     }
     .copy-btn:hover { color: #999; }
 
-    /* カード内のコンテンツ配置 */
+    /* カード内のコンテンツ */
     .card-content { 
-        flex: 1; /* 残りの高さを全て使う */
-        padding: 10px 30px; /* 左右の余白を広めに */
+        flex: 1; 
+        padding: 10px 25px; 
         display: flex; 
         flex-direction: column; 
         align-items: center; 
-        justify-content: center; /* 上下中央揃え */
+        justify-content: center; 
         text-align: center;
-        overflow-y: auto; /* 万が一はみ出た場合はスクロール */
+        overflow-y: auto; 
     }
 
-    /* カードフッター（ヒント用） */
+    /* 文字サイズ調整箇所 */
+    .q-text { 
+        font-size: 1.6rem; /* 2.2rem -> 1.6rem に縮小 */
+        font-weight: bold; 
+        margin-bottom: 25px; 
+        color: #222; 
+        width: 100%; 
+        line-height: 1.5; /* 行間を広げて読みやすく */
+        word-break: break-all;
+    }
+     
+    .answer-area { 
+        width: 100%; 
+        display: none; 
+        border-top: 1px solid #f0f0f0; 
+        padding-top: 20px; 
+        animation: fadeIn 0.2s ease; 
+    }
+     
+    .a-text { 
+        font-size: 1.3rem; /* 1.8rem -> 1.3rem に縮小 */
+        color: #d32f2f; 
+        font-weight: bold; 
+        margin-bottom: 8px;
+        word-break: break-all;
+        line-height: 1.4;
+    }
+     
+    .r-text { 
+        font-size: 0.95rem; /* 1.1rem -> 0.95rem に縮小 */
+        color: #777; 
+        word-break: break-all;
+    }
+
+    /* カードフッター */
     .card-footer {
         padding: 5px 20px 15px 20px;
         text-align: right;
@@ -107,43 +140,8 @@
     }
      
     .shortcut-hint { 
-        /* 絶対配置を解除 */
         font-size: 0.75rem; 
         color: #ddd; 
-    }
-
-    /* 文字サイズ */
-    .q-text { 
-        font-size: 2.2rem; /* さらに少し大きく */
-        font-weight: bold; 
-        margin-bottom: 25px; 
-        color: #222; 
-        width: 100%; 
-        line-height: 1.3;
-        word-break: break-all;
-    }
-     
-    .answer-area { 
-        width: 100%; 
-        display: none; 
-        border-top: 2px solid #f8f8f8; 
-        padding-top: 20px; 
-        animation: fadeIn 0.2s ease; 
-    }
-     
-    .a-text { 
-        font-size: 1.8rem; /* 解答も少し大きく */
-        color: #d32f2f; 
-        font-weight: bold; 
-        margin-bottom: 8px;
-        word-break: break-all;
-        line-height: 1.3;
-    }
-     
-    .r-text { 
-        font-size: 1.1rem;
-        color: #777; 
-        word-break: break-all;
     }
 
     @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
