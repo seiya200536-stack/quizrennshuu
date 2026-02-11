@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>最強の単語帳</title>
+<title>最強の単語帳 v3.5 (シンプル固定レイアウト版)</title>
 <script src="https://unpkg.com/dexie/dist/dexie.js"></script>
 <script src="https://unpkg.com/papaparse/papaparse.min.js"></script>
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
@@ -35,7 +35,7 @@
     #header { padding: 10px 15px; background: white; border-bottom: 1px solid #e0e0e0; display: flex; justify-content: space-between; align-items: center; height: 50px; flex-shrink: 0; }
     .status-badge { background: #e8f5e9; color: #2e7d32; padding: 4px 10px; border-radius: 15px; font-size: 0.8rem; font-weight: bold; }
     
-    /* カードエリア */
+    /* カードエリア：ボタンとの干渉を防ぐためFlex-growで余白を埋める */
     #card-container { 
         flex: 1; 
         padding: 10px; 
@@ -43,14 +43,12 @@
         justify-content: center; 
         align-items: center; 
         overflow: hidden;
-        /* カードとボタンの間隔調整 */
-        padding-bottom: 0;
     }
     
     #card {
         width: 100%; 
         max-width: 500px; 
-        height: 360px; /* 高さを320pxから360pxへ拡大 */
+        height: 380px; /* カードの高さをしっかり確保して文字を入れる */
         background: white; 
         border-radius: 20px;
         box-shadow: 0 8px 25px rgba(0,0,0,0.08);
@@ -64,26 +62,27 @@
     /* カード内のコンテンツ配置 */
     .card-content { 
         flex: 1; 
-        padding: 24px; 
+        padding: 15px 20px; /* 余白を少し詰めて文字スペースを確保 */
         display: flex; 
         flex-direction: column; 
         align-items: center; 
         justify-content: center; 
         text-align: center;
-        overflow-y: auto; /* 文字が極端に多い場合はスクロール許可 */
+        /* 長文時はスクロール可能にするが、基本は収まるように調整 */
+        overflow-y: auto; 
     }
     
     .level-badge { position: absolute; top: 15px; left: 15px; font-size: 0.8rem; color: #aaa; border: 1px solid #eee; padding: 2px 8px; border-radius: 6px; }
     .shortcut-hint { position: absolute; bottom: 10px; right: 15px; font-size: 0.7rem; color: #ddd; }
 
-    /* 文字サイズの調整：全体的に大きく */
+    /* 文字サイズの固定：JSで変更せずCSSで固定 */
     .q-text { 
-        font-size: 2.2rem; /* 基準サイズを大幅アップ */
+        font-size: 1.9rem; /* 固定の大型サイズ */
         font-weight: bold; 
         margin-bottom: 20px; 
         color: #222; 
         width: 100%; 
-        line-height: 1.4;
+        line-height: 1.3;
         word-break: break-all;
     }
     
@@ -91,39 +90,39 @@
         width: 100%; 
         display: none; 
         border-top: 2px solid #f8f8f8; 
-        padding-top: 20px; 
+        padding-top: 15px; 
         animation: fadeIn 0.2s ease; 
     }
     
     .a-text { 
-        font-size: 1.6rem; /* 解答も大きく */
+        font-size: 1.5rem; /* 解答も固定サイズ */
         color: #d32f2f; 
         font-weight: bold; 
-        margin-bottom: 6px;
+        margin-bottom: 5px;
         word-break: break-all;
         line-height: 1.3;
     }
     
     .r-text { 
-        font-size: 1.1rem; /* 読み仮名も少し大きく */
+        font-size: 1.0rem;
         color: #777; 
         word-break: break-all;
     }
 
     @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
 
-    /* コントロールボタンエリア */
+    /* コントロールボタンエリア：高さ確保と配置 */
     #controls { 
         height: auto;
-        min-height: 190px;
-        padding: 10px 10px 30px 10px; /* 下部に30pxの余白を追加してボタン全体を持ち上げる */
+        min-height: 200px; /* ボタンエリアの高さを確保 */
+        padding: 10px 10px 40px 10px; /* 下に余白を持たせてボタンを上に配置 */
         background: #fff; 
         border-top: 1px solid #eee;
         display: flex; 
         flex-direction: column; 
         justify-content: center; 
         align-items: center; 
-        gap: 12px; /* ボタン間の隙間を少し広げる */
+        gap: 12px;
         flex-shrink: 0; 
         z-index: 10;
     }
@@ -136,20 +135,19 @@
         border: none; 
         border-radius: 14px; 
         font-weight: bold; 
-        font-size: 1.0rem; /* ボタン文字も少し大きく */
+        font-size: 1.0rem; 
         cursor: pointer; 
         display: flex; 
         flex-direction: column; 
         justify-content: center; 
         align-items: center; 
-        height: 56px; /* ボタン自体の高さも少しアップ */
+        height: 56px;
         transition: transform 0.1s; 
         box-shadow: 0 4px 10px rgba(0,0,0,0.05);
         user-select: none;
     }
     .btn:active, .btn.active-key { transform: scale(0.94); filter: brightness(0.9); }
     
-    /* 色設定 */
     .btn-understand { background: #f1f8e9; color: #33691e; }
     .btn-unknown { background: #fff3e0; color: #e65100; }
     .btn-later { background: #f5f5f5; color: #616161; }
@@ -308,26 +306,14 @@
         document.getElementById('lvl-badge').innerText = `Lv.${currentCard.reviewCount || 0}`;
         document.getElementById('a-area').style.display = 'none';
         
-        // 文字数に応じたサイズ調整（基準値を大きく変更）
-        const totalLen = currentCard.question.length + currentCard.answer.length;
-        const qElem = document.getElementById('q-text');
-        
-        // 文字数が多くても極端に小さくならないように調整
-        if (totalLen > 60) {
-            qElem.style.fontSize = "1.3rem"; // 最長文でも読みやすいサイズ確保
-        } else if (totalLen > 30) {
-            qElem.style.fontSize = "1.7rem"; // 中くらいの文章
-        } else {
-            qElem.style.fontSize = "2.4rem"; // 短い単語はドカンと大きく
-        }
-
+        // 文字サイズ調整ロジックは削除し、CSS固定サイズに任せる
         updateCount();
     }
 
     function showAnswer() {
         document.getElementById('a-area').style.display = 'block';
         isAnswerShown = true;
-        // 解答表示時にスクロールが必要なら下へ
+        // 基本的にはスクロールさせないが、万が一のために自動スクロールは残す
         const content = document.querySelector('.card-content');
         if(content.scrollHeight > content.clientHeight) {
             content.scrollTop = content.scrollHeight;
