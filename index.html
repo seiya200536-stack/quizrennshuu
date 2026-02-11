@@ -9,17 +9,33 @@
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 
 <style>
-    body { margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #f0f2f5; height: 100vh; display: flex; flex-direction: column; overflow: hidden; color: #333; }
+    /* 全要素のサイズ計算を枠線込みにする（レイアウト崩れ防止） */
+    * { box-sizing: border-box; }
+
+    body { 
+        margin: 0; padding: 0; 
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
+        background: #f0f2f5; 
+        height: 100vh; 
+        display: flex; flex-direction: column; 
+        overflow: hidden; 
+        color: #333; 
+        /* ダブルタップ拡大防止 (全体) */
+        touch-action: manipulation;
+    }
     
+    /* ボタン類のダブルタップ拡大防止 */
+    button, .btn, input { touch-action: manipulation; }
+
     .screen { display: none; flex-direction: column; height: 100%; width: 100%; }
     .active { display: flex; }
 
     /* 設定画面 */
     #setup-screen { justify-content: center; align-items: center; padding: 20px; text-align: center; }
-    .upload-box { border: 2px dashed #ccc; padding: 30px; border-radius: 10px; background: white; margin-bottom: 20px; }
+    .upload-box { border: 2px dashed #ccc; padding: 30px; border-radius: 10px; background: white; margin-bottom: 20px; width: 100%; max-width: 400px; }
     
     /* ヘッダー */
-    #header { padding: 10px 15px; background: white; border-bottom: 1px solid #e0e0e0; display: flex; justify-content: space-between; align-items: center; height: 50px; }
+    #header { padding: 10px 15px; background: white; border-bottom: 1px solid #e0e0e0; display: flex; justify-content: space-between; align-items: center; height: 50px; flex-shrink: 0; }
     .status-badge { background: #e8f5e9; color: #2e7d32; padding: 4px 10px; border-radius: 15px; font-size: 0.8rem; font-weight: bold; }
     
     /* カードエリア */
@@ -37,7 +53,6 @@
     
     .level-badge { position: absolute; top: 15px; left: 15px; font-size: 0.75rem; color: #aaa; border: 1px solid #eee; padding: 2px 8px; border-radius: 4px; }
     .shortcut-hint { position: absolute; bottom: 10px; right: 15px; font-size: 0.7rem; color: #ccc; display: none; }
-    /* PCのみショートカットヒントを表示 */
     @media (min-width: 768px) { .shortcut-hint { display: block; } }
 
     .q-text { font-size: 1.8rem; font-weight: bold; margin-bottom: 20px; color: #222; width: 100%; line-height: 1.4; }
@@ -48,26 +63,27 @@
 
     @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
 
-    /* コントロールボタン (十字キー配置) */
-    #controls { height: 160px; padding: 10px; background: white; box-shadow: 0 -2px 10px rgba(0,0,0,0.05); display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 8px; }
+    /* コントロールボタン */
+    #controls { height: 160px; padding: 10px; background: white; box-shadow: 0 -2px 10px rgba(0,0,0,0.05); display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 8px; flex-shrink: 0; }
     
     .control-row { display: flex; gap: 15px; width: 100%; max-width: 500px; justify-content: center; align-items: center; }
-    .btn { width: 110px; border: none; border-radius: 12px; font-weight: bold; font-size: 0.95rem; cursor: pointer; display: flex; flex-direction: column; justify-content: center; align-items: center; height: 48px; transition: 0.1s; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+    .btn { width: 110px; border: none; border-radius: 12px; font-weight: bold; font-size: 0.95rem; cursor: pointer; display: flex; flex-direction: column; justify-content: center; align-items: center; height: 48px; transition: 0.1s; box-shadow: 0 2px 5px rgba(0,0,0,0.1); user-select: none; -webkit-user-select: none; }
     .btn:active, .btn.active-key { transform: scale(0.96); filter: brightness(0.9); }
     
     /* 色設定 */
-    .btn-understand { background: #e8f5e9; color: #1b5e20; } /* 右：わかる (緑) */
-    .btn-unknown { background: #fff3e0; color: #e65100; }    /* 左：わからない (オレンジ) */
-    .btn-later { background: #f1f3f4; color: #5f6368; }     /* 下：後回し (グレー) */
-    .btn-known { background: #e3f2fd; color: #0d47a1; }     /* 上：知ってる (青) */
+    .btn-understand { background: #e8f5e9; color: #1b5e20; }
+    .btn-unknown { background: #fff3e0; color: #e65100; }
+    .btn-later { background: #f1f3f4; color: #5f6368; }
+    .btn-known { background: #e3f2fd; color: #0d47a1; }
 
-    /* レイアウト調整用 */
     .row-middle { justify-content: center; gap: 30px; }
 
-    /* オーバーレイ */
+    /* オーバーレイ (位置ズレ修正: fixedにして画面全体を基準にする) */
     #overlay { 
-        position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
-        background: rgba(255,255,255,0.95); z-index: 100;
+        position: fixed; /* absolute -> fixed */
+        top: 0; left: 0; right: 0; bottom: 0;
+        width: 100%; height: 100%; 
+        background: rgba(255,255,255,0.95); z-index: 999;
         display: none; flex-direction: column; justify-content: center; align-items: center; 
         text-align: center; padding: 20px;
     }
@@ -107,12 +123,12 @@
                     </div>
                 </div>
             </div>
+        </div>
 
-            <div id="overlay">
-                <h2 id="overlay-msg"></h2>
-                <button class="big-btn" id="overlay-btn" onclick="startSession()">学習スタート</button>
-                <button class="sub-btn" id="overlay-sub-btn" onclick="addMore()">追加で30問やる</button>
-            </div>
+        <div id="overlay">
+            <h2 id="overlay-msg"></h2>
+            <button class="big-btn" id="overlay-btn" onclick="startSession()">学習スタート</button>
+            <button class="sub-btn" id="overlay-sub-btn" onclick="addMore()">追加で30問やる</button>
         </div>
 
         <div id="controls">
@@ -150,7 +166,7 @@
     let isSessionActive = false;
 
     // 初期化
-    document.getElementById('overlay').style.display = 'none'; // 初期状態を明示
+    document.getElementById('overlay').style.display = 'none';
 
     window.onload = async () => {
         checkMidnightReset();
@@ -165,12 +181,9 @@
 
     // --- キーボード操作 ---
     document.addEventListener('keydown', (e) => {
-        // 設定画面などの場合は無効 (class activeの有無で判定)
         if (!document.getElementById('study-screen').classList.contains('active')) return;
 
-        // オーバーレイが表示されている場合
         const overlay = document.getElementById('overlay');
-        // computedStyleを使って確実に表示状態を確認
         if (window.getComputedStyle(overlay).display !== 'none') {
             if (e.key === 'Enter') {
                 e.preventDefault();
@@ -179,32 +192,31 @@
             return;
         }
 
-        // 学習中
         switch(e.key) {
             case 'Enter':
-            case ' ': // スペースキーも対応
+            case ' ':
                 e.preventDefault();
                 if (!isAnswerShown) {
                     showAnswer();
                     highlightButton('card');
                 }
                 break;
-            case 'ArrowLeft': // わからない (Unknown)
+            case 'ArrowLeft': 
                 e.preventDefault();
                 highlightButton('btn-unknown');
                 clickUnknown();
                 break;
-            case 'ArrowRight': // わかる (Understand)
+            case 'ArrowRight': 
                 e.preventDefault();
                 highlightButton('btn-understand');
                 clickUnderstand();
                 break;
-            case 'ArrowUp': // 知ってる (Known)
+            case 'ArrowUp': 
                 e.preventDefault();
                 highlightButton('btn-known');
                 clickKnown();
                 break;
-            case 'ArrowDown': // 後回し (Later)
+            case 'ArrowDown': 
                 e.preventDefault();
                 highlightButton('btn-later');
                 clickLater();
@@ -234,15 +246,12 @@
         document.getElementById('progress-text').innerText = "準備中...";
         const now = Date.now();
         
-        // 1. 復習
         const reviews = await db.questions.where('status').equals(1).filter(i => i.nextReview <= now).toArray();
-        
-        // 2. 新規
         let needed = Math.max(0, 30 - reviews.length);
         const news = (needed > 0) ? await getNewQuestions(needed) : [];
 
         studyQueue = [...reviews, ...news]; 
-        studyQueue.sort(() => Math.random() - 0.5); // シャッフル
+        studyQueue.sort(() => Math.random() - 0.5);
 
         if (studyQueue.length === 0) {
             showOverlay("現在、復習すべき問題はありません", "閉じる", true);
@@ -263,7 +272,6 @@
         loadNextCard();
     }
 
-    // カード表示
     function loadNextCard() {
         if (studyQueue.length === 0) {
             completeSession(); return;
@@ -277,47 +285,41 @@
         document.getElementById('lvl-badge').innerText = `Lv.${currentCard.reviewCount || 0}`;
         document.getElementById('a-area').style.display = 'none';
         
-        // ボタンラベルのリセット (アイコンの方向を修正)
+        // アイコン方向の維持
         document.getElementById('btn-unknown').innerHTML = '<span><i class="fa-solid fa-arrow-left"></i> わからない</span>';
         document.getElementById('btn-understand').innerHTML = '<span>わかる <i class="fa-solid fa-arrow-right"></i></span>';
 
         updateCount();
     }
 
-    // --- アクション (キー配置変更に対応) ---
+    // --- アクション ---
 
-    // 下キー：後回し
     async function clickLater() {
         if (!isSessionActive) return;
-        // 最後尾へ移動
         const lastItem = await db.questions.orderBy('order').last();
         const maxOrder = lastItem ? lastItem.order : 0;
         await db.questions.update(currentCard.id, { order: maxOrder + 1000 });
-
         studyQueue.shift();
         loadNextCard();
     }
 
-    // 左キー：わからない
     function clickUnknown() {
         if (!isSessionActive) return;
         if (!isAnswerShown) {
             showAnswer();
             document.getElementById('btn-unknown').innerHTML = '<span><i class="fa-solid fa-arrow-left"></i> もう一度</span>';
         } else {
-            studyQueue.push(studyQueue.shift()); // リストの最後へ
+            studyQueue.push(studyQueue.shift()); 
             loadNextCard();
         }
     }
 
-    // 右キー：わかる
     async function clickUnderstand() {
         if (!isSessionActive) return;
         if (!isAnswerShown) {
             showAnswer();
             document.getElementById('btn-understand').innerHTML = '<span>次へ <i class="fa-solid fa-arrow-right"></i></span>';
         } else {
-            // 復習予約
             const nextTime = Date.now() + (24 * 60 * 60 * 1000);
             await db.questions.update(currentCard.id, {
                 status: 1,
@@ -329,7 +331,6 @@
         }
     }
 
-    // 上キー：知ってる
     async function clickKnown() {
         if (!isSessionActive) return;
         await db.questions.update(currentCard.id, { status: 9 });
@@ -342,7 +343,6 @@
         isAnswerShown = true;
     }
 
-    // --- その他 ---
     function completeSession() {
         isSessionActive = false;
         showOverlay("🎉 ノルマ達成！", "明日まで待機", true);
@@ -372,7 +372,6 @@
     
     function updateCount() { document.getElementById('progress-text').innerText = `残り: ${studyQueue.length}問`; }
 
-    // CSV読み込み
     document.getElementById('csv-file').addEventListener('change', function(e) {
         const file = e.target.files[0];
         if (!file) return;
