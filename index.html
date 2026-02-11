@@ -9,7 +9,6 @@
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 
 <style>
-    /* 全要素のサイズ計算を枠線込みにする（レイアウト崩れ防止） */
     * { box-sizing: border-box; }
 
     body { 
@@ -20,11 +19,9 @@
         display: flex; flex-direction: column; 
         overflow: hidden; 
         color: #333; 
-        /* ダブルタップ拡大防止 (全体) */
         touch-action: manipulation;
     }
     
-    /* ボタン類のダブルタップ拡大防止 */
     button, .btn, input { touch-action: manipulation; }
 
     .screen { display: none; flex-direction: column; height: 100%; width: 100%; }
@@ -38,57 +35,130 @@
     #header { padding: 10px 15px; background: white; border-bottom: 1px solid #e0e0e0; display: flex; justify-content: space-between; align-items: center; height: 50px; flex-shrink: 0; }
     .status-badge { background: #e8f5e9; color: #2e7d32; padding: 4px 10px; border-radius: 15px; font-size: 0.8rem; font-weight: bold; }
     
-    /* カードエリア */
-    #card-container { flex: 1; position: relative; padding: 15px; display: flex; justify-content: center; align-items: center; }
+    /* カードエリア：高さを固定してボタンを動かさない */
+    #card-container { 
+        flex: 1; 
+        padding: 10px; 
+        display: flex; 
+        justify-content: center; 
+        align-items: center; 
+        overflow: hidden;
+    }
     
     #card {
-        width: 100%; max-width: 600px; height: 100%; max-height: 70vh;
-        background: white; border-radius: 16px;
-        box-shadow: 0 10px 25px rgba(0,0,0,0.08);
-        display: flex; flex-direction: column;
-        position: relative; overflow: hidden; transition: transform 0.1s;
+        width: 100%; 
+        max-width: 500px; 
+        height: 320px; /* 高さを完全に固定 */
+        background: white; 
+        border-radius: 16px;
+        box-shadow: 0 8px 20px rgba(0,0,0,0.06);
+        display: flex; 
+        flex-direction: column;
+        position: relative; 
+        overflow: hidden;
+        cursor: pointer; /* クリックできることを示す */
     }
 
-    .card-content { flex: 1; padding: 30px; overflow-y: auto; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
+    /* カード内のコンテンツ配置 */
+    .card-content { 
+        flex: 1; 
+        padding: 20px; 
+        display: flex; 
+        flex-direction: column; 
+        align-items: center; 
+        justify-content: center; 
+        text-align: center;
+        overflow: hidden; /* はみ出し防止 */
+    }
     
-    .level-badge { position: absolute; top: 15px; left: 15px; font-size: 0.75rem; color: #aaa; border: 1px solid #eee; padding: 2px 8px; border-radius: 4px; }
-    .shortcut-hint { position: absolute; bottom: 10px; right: 15px; font-size: 0.7rem; color: #ccc; display: none; }
-    @media (min-width: 768px) { .shortcut-hint { display: block; } }
+    .level-badge { position: absolute; top: 12px; left: 12px; font-size: 0.7rem; color: #aaa; border: 1px solid #eee; padding: 1px 6px; border-radius: 4px; }
+    .shortcut-hint { position: absolute; bottom: 8px; right: 12px; font-size: 0.65rem; color: #ddd; }
 
-    .q-text { font-size: 1.8rem; font-weight: bold; margin-bottom: 20px; color: #222; width: 100%; line-height: 1.4; }
+    /* 文字サイズの調整：長文でも入りやすく */
+    .q-text { 
+        font-size: 1.4rem; 
+        font-weight: bold; 
+        margin-bottom: 15px; 
+        color: #222; 
+        width: 100%; 
+        line-height: 1.3;
+        word-break: break-all;
+    }
     
-    .answer-area { width: 100%; display: none; border-top: 1px solid #f0f0f0; padding-top: 20px; margin-top: 20px; animation: fadeIn 0.2s ease; }
-    .a-text { font-size: 1.5rem; color: #d32f2f; font-weight: bold; margin-bottom: 8px; }
-    .r-text { font-size: 1.1rem; color: #666; }
+    .answer-area { 
+        width: 100%; 
+        display: none; 
+        border-top: 1px solid #f8f8f8; 
+        padding-top: 15px; 
+        animation: fadeIn 0.2s ease; 
+    }
+    
+    .a-text { 
+        font-size: 1.2rem; 
+        color: #d32f2f; 
+        font-weight: bold; 
+        margin-bottom: 4px;
+        word-break: break-all;
+    }
+    
+    .r-text { 
+        font-size: 0.95rem; 
+        color: #777; 
+        word-break: break-all;
+    }
 
-    @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
-    /* コントロールボタン */
-    #controls { height: 160px; padding: 10px; background: white; box-shadow: 0 -2px 10px rgba(0,0,0,0.05); display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 8px; flex-shrink: 0; }
+    /* コントロールボタン：ここも高さ固定 */
+    #controls { 
+        height: 180px; 
+        padding: 10px; 
+        background: #fff; 
+        border-top: 1px solid #eee;
+        display: flex; 
+        flex-direction: column; 
+        justify-content: center; 
+        align-items: center; 
+        gap: 10px; 
+        flex-shrink: 0; 
+    }
     
-    .control-row { display: flex; gap: 15px; width: 100%; max-width: 500px; justify-content: center; align-items: center; }
-    .btn { width: 110px; border: none; border-radius: 12px; font-weight: bold; font-size: 0.95rem; cursor: pointer; display: flex; flex-direction: column; justify-content: center; align-items: center; height: 48px; transition: 0.1s; box-shadow: 0 2px 5px rgba(0,0,0,0.1); user-select: none; -webkit-user-select: none; }
-    .btn:active, .btn.active-key { transform: scale(0.96); filter: brightness(0.9); }
+    .control-row { display: flex; gap: 15px; width: 100%; max-width: 400px; justify-content: center; align-items: center; }
     
-    /* 色設定 */
-    .btn-understand { background: #e8f5e9; color: #1b5e20; }
+    .btn { 
+        flex: 1; 
+        max-width: 140px;
+        border: none; 
+        border-radius: 12px; 
+        font-weight: bold; 
+        font-size: 0.9rem; 
+        cursor: pointer; 
+        display: flex; 
+        flex-direction: column; 
+        justify-content: center; 
+        align-items: center; 
+        height: 50px; 
+        transition: transform 0.1s; 
+        box-shadow: 0 2px 4px rgba(0,0,0,0.08);
+        user-select: none;
+    }
+    .btn:active, .btn.active-key { transform: scale(0.94); filter: brightness(0.9); }
+    
+    /* 色の調整（少し落ち着いた色味に） */
+    .btn-understand { background: #f1f8e9; color: #33691e; }
     .btn-unknown { background: #fff3e0; color: #e65100; }
-    .btn-later { background: #f1f3f4; color: #5f6368; }
-    .btn-known { background: #e3f2fd; color: #0d47a1; }
+    .btn-later { background: #f5f5f5; color: #616161; }
+    .btn-known { background: #e3f2fd; color: #1565c0; }
 
-    .row-middle { justify-content: center; gap: 30px; }
-
-    /* オーバーレイ (位置ズレ修正: fixedにして画面全体を基準にする) */
+    /* オーバーレイ */
     #overlay { 
-        position: fixed; /* absolute -> fixed */
-        top: 0; left: 0; right: 0; bottom: 0;
+        position: fixed; top: 0; left: 0; right: 0; bottom: 0;
         width: 100%; height: 100%; 
-        background: rgba(255,255,255,0.95); z-index: 999;
+        background: rgba(255,255,255,0.98); z-index: 999;
         display: none; flex-direction: column; justify-content: center; align-items: center; 
         text-align: center; padding: 20px;
     }
-    .big-btn { background: #2196f3; color: white; border: none; padding: 15px 40px; border-radius: 30px; font-size: 1.2rem; font-weight: bold; cursor: pointer; margin-top: 10px; }
-    .sub-btn { background: none; border: none; color: #666; margin-top: 20px; text-decoration: underline; cursor: pointer; }
+    .big-btn { background: #2196f3; color: white; border: none; padding: 15px 50px; border-radius: 30px; font-size: 1.1rem; font-weight: bold; cursor: pointer; }
 
 </style>
 </head>
@@ -99,21 +169,20 @@
         <div class="upload-box">
             <p>CSVファイルを選択してください</p>
             <input type="file" id="csv-file" accept=".csv" />
-            <p style="font-size:0.8rem; color:#888;">形式: 問題, 答え, 読み</p>
         </div>
     </div>
 
     <div id="study-screen" class="screen">
         <div id="header">
             <span class="status-badge" id="progress-text">準備中...</span>
-            <button onclick="resetData()" style="background:none; border:none; color:#999; cursor:pointer;">リセット</button>
+            <button onclick="resetData()" style="background:none; border:none; color:#999; cursor:pointer; font-size:0.8rem;">リセット</button>
         </div>
 
         <div id="card-container">
-            <div id="card">
+            <div id="card" onclick="handleCardClick()">
                 <span class="level-badge" id="lvl-badge">Lv.0</span>
-                <span class="shortcut-hint">Enter:解答 | 矢印:操作</span>
-                <button onclick="copyCardContent()" style="position:absolute; top:15px; right:15px; border:none; background:none; cursor:pointer; color:#ccc;"><i class="fa-regular fa-copy"></i></button>
+                <span class="shortcut-hint">タップで解答</span>
+                <button onclick="event.stopPropagation(); copyCardContent()" style="position:absolute; top:12px; right:12px; border:none; background:none; cursor:pointer; color:#ddd;"><i class="fa-regular fa-copy"></i></button>
 
                 <div class="card-content">
                     <div class="q-text" id="q-text"></div>
@@ -128,29 +197,28 @@
         <div id="overlay">
             <h2 id="overlay-msg"></h2>
             <button class="big-btn" id="overlay-btn" onclick="startSession()">学習スタート</button>
-            <button class="sub-btn" id="overlay-sub-btn" onclick="addMore()">追加で30問やる</button>
+            <button onclick="addMore()" id="overlay-sub-btn" style="background:none; border:none; color:#999; margin-top:30px; text-decoration:underline; cursor:pointer;">さらに30問追加</button>
         </div>
 
         <div id="controls">
             <div class="control-row">
                 <button class="btn btn-known" id="btn-known" onclick="clickKnown()">
-                    <span><i class="fa-solid fa-arrow-up"></i> 知ってる</span>
+                    <i class="fa-solid fa-arrow-up"></i><span>知ってる</span>
                 </button>
             </div>
             
-            <div class="control-row row-middle">
+            <div class="control-row">
                 <button class="btn btn-unknown" id="btn-unknown" onclick="clickUnknown()">
-                    <span><i class="fa-solid fa-arrow-left"></i> わからない</span>
+                    <i class="fa-solid fa-arrow-left"></i><span>わからない</span>
                 </button>
-                
                 <button class="btn btn-understand" id="btn-understand" onclick="clickUnderstand()">
-                    <span>わかる <i class="fa-solid fa-arrow-right"></i></span>
+                    <span>わかる</span><i class="fa-solid fa-arrow-right"></i>
                 </button>
             </div>
 
             <div class="control-row">
                 <button class="btn btn-later" id="btn-later" onclick="clickLater()">
-                    <span><i class="fa-solid fa-arrow-down"></i> 後回し</span>
+                    <i class="fa-solid fa-arrow-down"></i><span>後回し</span>
                 </button>
             </div>
         </div>
@@ -165,11 +233,7 @@
     let isAnswerShown = false;
     let isSessionActive = false;
 
-    // 初期化
-    document.getElementById('overlay').style.display = 'none';
-
     window.onload = async () => {
-        checkMidnightReset();
         const count = await db.questions.count();
         if (count > 0) {
             switchScreen('study-screen');
@@ -179,16 +243,19 @@
         }
     };
 
-    // --- キーボード操作 ---
+    // カードクリック時の動作
+    function handleCardClick() {
+        if (!isSessionActive || isAnswerShown) return;
+        showAnswer();
+    }
+
+    // キーボード操作
     document.addEventListener('keydown', (e) => {
         if (!document.getElementById('study-screen').classList.contains('active')) return;
 
         const overlay = document.getElementById('overlay');
         if (window.getComputedStyle(overlay).display !== 'none') {
-            if (e.key === 'Enter') {
-                e.preventDefault();
-                document.getElementById('overlay-btn').click();
-            }
+            if (e.key === 'Enter') { e.preventDefault(); document.getElementById('overlay-btn').click(); }
             return;
         }
 
@@ -196,86 +263,39 @@
             case 'Enter':
             case ' ':
                 e.preventDefault();
-                if (!isAnswerShown) {
-                    showAnswer();
-                    highlightButton('card');
-                }
+                if (!isAnswerShown) showAnswer();
                 break;
-            case 'ArrowLeft': 
-                e.preventDefault();
-                highlightButton('btn-unknown');
-                clickUnknown();
-                break;
-            case 'ArrowRight': 
-                e.preventDefault();
-                highlightButton('btn-understand');
-                clickUnderstand();
-                break;
-            case 'ArrowUp': 
-                e.preventDefault();
-                highlightButton('btn-known');
-                clickKnown();
-                break;
-            case 'ArrowDown': 
-                e.preventDefault();
-                highlightButton('btn-later');
-                clickLater();
-                break;
+            case 'ArrowLeft': clickUnknown(); highlightButton('btn-unknown'); break;
+            case 'ArrowRight': clickUnderstand(); highlightButton('btn-understand'); break;
+            case 'ArrowUp': clickKnown(); highlightButton('btn-known'); break;
+            case 'ArrowDown': clickLater(); highlightButton('btn-later'); break;
         }
     });
 
     function highlightButton(id) {
-        if(id === 'card') return; 
         const btn = document.getElementById(id);
         btn.classList.add('active-key');
         setTimeout(() => btn.classList.remove('active-key'), 150);
     }
 
-    // --- ロジック ---
-
-    async function getNewQuestions(count) {
-        return await db.questions
-            .orderBy('order')
-            .filter(item => item.status === 0)
-            .limit(count)
-            .toArray();
-    }
-
     async function startSession() {
         hideOverlay();
-        document.getElementById('progress-text').innerText = "準備中...";
         const now = Date.now();
-        
         const reviews = await db.questions.where('status').equals(1).filter(i => i.nextReview <= now).toArray();
         let needed = Math.max(0, 30 - reviews.length);
-        const news = (needed > 0) ? await getNewQuestions(needed) : [];
+        const news = (needed > 0) ? await db.questions.orderBy('order').filter(i => i.status === 0).limit(needed).toArray() : [];
 
-        studyQueue = [...reviews, ...news]; 
-        studyQueue.sort(() => Math.random() - 0.5);
-
+        studyQueue = [...reviews, ...news].sort(() => Math.random() - 0.5);
         if (studyQueue.length === 0) {
-            showOverlay("現在、復習すべき問題はありません", "閉じる", true);
+            showOverlay("復習はありません", "終了", false);
             return;
         }
         isSessionActive = true;
         loadNextCard();
     }
 
-    async function addMore() {
-        const moreNews = await getNewQuestions(30);
-        if (moreNews.length === 0) {
-            alert("新規問題はもうありません！"); return;
-        }
-        studyQueue = moreNews;
-        hideOverlay();
-        isSessionActive = true;
-        loadNextCard();
-    }
-
     function loadNextCard() {
-        if (studyQueue.length === 0) {
-            completeSession(); return;
-        }
+        if (studyQueue.length === 0) { completeSession(); return; }
         currentCard = studyQueue[0];
         isAnswerShown = false;
 
@@ -285,57 +305,14 @@
         document.getElementById('lvl-badge').innerText = `Lv.${currentCard.reviewCount || 0}`;
         document.getElementById('a-area').style.display = 'none';
         
-        // アイコン方向の維持
-        document.getElementById('btn-unknown').innerHTML = '<span><i class="fa-solid fa-arrow-left"></i> わからない</span>';
-        document.getElementById('btn-understand').innerHTML = '<span>わかる <i class="fa-solid fa-arrow-right"></i></span>';
+        // 文字数に応じたサイズ微調整 (1.4rem ~ 1.0rem)
+        const totalLen = currentCard.question.length + currentCard.answer.length;
+        const qElem = document.getElementById('q-text');
+        if (totalLen > 50) qElem.style.fontSize = "1.0rem";
+        else if (totalLen > 30) qElem.style.fontSize = "1.2rem";
+        else qElem.style.fontSize = "1.4rem";
 
         updateCount();
-    }
-
-    // --- アクション ---
-
-    async function clickLater() {
-        if (!isSessionActive) return;
-        const lastItem = await db.questions.orderBy('order').last();
-        const maxOrder = lastItem ? lastItem.order : 0;
-        await db.questions.update(currentCard.id, { order: maxOrder + 1000 });
-        studyQueue.shift();
-        loadNextCard();
-    }
-
-    function clickUnknown() {
-        if (!isSessionActive) return;
-        if (!isAnswerShown) {
-            showAnswer();
-            document.getElementById('btn-unknown').innerHTML = '<span><i class="fa-solid fa-arrow-left"></i> もう一度</span>';
-        } else {
-            studyQueue.push(studyQueue.shift()); 
-            loadNextCard();
-        }
-    }
-
-    async function clickUnderstand() {
-        if (!isSessionActive) return;
-        if (!isAnswerShown) {
-            showAnswer();
-            document.getElementById('btn-understand').innerHTML = '<span>次へ <i class="fa-solid fa-arrow-right"></i></span>';
-        } else {
-            const nextTime = Date.now() + (24 * 60 * 60 * 1000);
-            await db.questions.update(currentCard.id, {
-                status: 1,
-                nextReview: nextTime,
-                reviewCount: (currentCard.reviewCount||0) + 1
-            });
-            studyQueue.shift();
-            loadNextCard();
-        }
-    }
-
-    async function clickKnown() {
-        if (!isSessionActive) return;
-        await db.questions.update(currentCard.id, { status: 9 });
-        studyQueue.shift();
-        loadNextCard();
     }
 
     function showAnswer() {
@@ -343,33 +320,50 @@
         isAnswerShown = true;
     }
 
+    async function clickUnderstand() {
+        if (!isSessionActive) return;
+        if (!isAnswerShown) { showAnswer(); return; }
+        const nextTime = Date.now() + (24 * 60 * 60 * 1000);
+        await db.questions.update(currentCard.id, { status: 1, nextReview: nextTime, reviewCount: (currentCard.reviewCount||0) + 1 });
+        studyQueue.shift(); loadNextCard();
+    }
+
+    function clickUnknown() {
+        if (!isSessionActive) return;
+        if (!isAnswerShown) { showAnswer(); return; }
+        studyQueue.push(studyQueue.shift()); loadNextCard();
+    }
+
+    async function clickKnown() {
+        if (!isSessionActive) return;
+        await db.questions.update(currentCard.id, { status: 9 });
+        studyQueue.shift(); loadNextCard();
+    }
+
+    async function clickLater() {
+        if (!isSessionActive) return;
+        const lastItem = await db.questions.orderBy('order').last();
+        await db.questions.update(currentCard.id, { order: (lastItem ? lastItem.order : 0) + 1000 });
+        studyQueue.shift(); loadNextCard();
+    }
+
     function completeSession() {
         isSessionActive = false;
-        showOverlay("🎉 ノルマ達成！", "明日まで待機", true);
+        showOverlay("🎉 完了！", "再開", true);
     }
     
     function showOverlay(msg, btnTxt, sub) {
         document.getElementById('overlay').style.display = 'flex';
         document.getElementById('overlay-msg').innerText = msg;
-        const btn = document.getElementById('overlay-btn');
-        btn.innerText = btnTxt;
-        if(btnTxt === "明日まで待機") {
-            btn.style.background = "#ccc";
-            btn.onclick = () => location.reload();
-        } else {
-            btn.style.background = "#2196f3";
-            btn.onclick = startSession;
-        }
+        document.getElementById('overlay-btn').innerText = btnTxt;
         document.getElementById('overlay-sub-btn').style.display = sub ? 'block' : 'none';
     }
 
     function hideOverlay() { document.getElementById('overlay').style.display = 'none'; }
-    
     function switchScreen(id) {
         document.querySelectorAll('.screen').forEach(e => e.classList.remove('active'));
         document.getElementById(id).classList.add('active');
     }
-    
     function updateCount() { document.getElementById('progress-text').innerText = `残り: ${studyQueue.length}問`; }
 
     document.getElementById('csv-file').addEventListener('change', function(e) {
@@ -380,13 +374,10 @@
             complete: async function(results) {
                 const rows = results.data;
                 const data = [];
-                let start = (rows[0][0].includes('問題') || rows[0][0].toLowerCase().includes('question')) ? 1 : 0;
+                let start = (rows[0][0].includes('問題')) ? 1 : 0;
                 for (let i = start; i < rows.length; i++) {
                     if (rows[i].length >= 2) {
-                        data.push({
-                            question: rows[i][0], answer: rows[i][1], reading: rows[i][2] || "",
-                            status: 0, nextReview: 0, reviewCount: 0, order: i
-                        });
+                        data.push({ question: rows[i][0], answer: rows[i][1], reading: rows[i][2] || "", status: 0, nextReview: 0, reviewCount: 0, order: i });
                     }
                 }
                 await db.questions.clear();
@@ -396,17 +387,15 @@
         });
     });
 
-    function checkMidnightReset() {
-        const last = localStorage.getItem('lastDate');
-        const today = new Date().toDateString();
-        if (last !== today) localStorage.setItem('lastDate', today);
-    }
-    async function resetData() {
-        if(confirm("全データを削除しますか？")) { await db.delete(); location.reload(); }
+    async function resetData() { if(confirm("全消去しますか？")) { await db.delete(); location.reload(); } }
+    async function addMore() {
+        const moreNews = await db.questions.orderBy('order').filter(i => i.status === 0).limit(30).toArray();
+        if (moreNews.length === 0) { alert("新規なし"); return; }
+        studyQueue = moreNews; hideOverlay(); isSessionActive = true; loadNextCard();
     }
     function copyCardContent() {
         if(!currentCard) return;
-        navigator.clipboard.writeText(`Q:${currentCard.question}\nA:${currentCard.answer} (${currentCard.reading||""})`);
+        navigator.clipboard.writeText(`${currentCard.question}\n${currentCard.answer}`);
     }
 </script>
 </body>
