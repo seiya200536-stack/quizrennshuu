@@ -408,7 +408,7 @@
             news = [...news, ...laters];
         }
 
-        studyQueue = [...reviews, ...news].sort(() => Math.random() - 0.5);
+        studyQueue = [...reviews, ...news];
         if (studyQueue.length === 0) {
             showOverlay("復習はありません", "終了", false);
             updateOverlayStats();
